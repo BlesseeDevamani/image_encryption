@@ -4,54 +4,71 @@ from PIL import Image
 import os
 
 def pad(data):
-    padding_required = AES.block_size - (len(data) % AES.block_size)
-    return data + bytes([padding_required]) * padding_required
+    padding_len = 16 - (len(data) % 16)
+    return data + bytes([padding_len]) * padding_len
 
 def unpad(data):
-    return data[:-data[-1]]
+    padding_len = data[-1]
+    return data[:-padding_len]
 
 def encrypt_image(image_path, key):
-    with open(image_path, "rb") as f:
-        image_data = f.read()
+    try:
+        with open(image_path, 'rb') as f:
+            data = f.read()
 
-    iv = get_random_bytes(16)
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    padded_data = pad(image_data)
-    encrypted_data = cipher.encrypt(padded_data)
+        data = pad(data)
+        iv = get_random_bytes(16)
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        encrypted = iv + cipher.encrypt(data)
 
-    encrypted_path = image_path + ".enc"
-    with open(encrypted_path, "wb") as f:
-        f.write(iv + encrypted_data)
+        encrypted_path = image_path + ".enc"
+        with open(encrypted_path, 'wb') as f:
+            f.write(encrypted)
 
-    print(f"Encrypted image saved to {encrypted_path}")
+        print(f"\n[+] Encrypted image saved to: {encrypted_path}")
+
+    except Exception as e:
+        print(f"[!] Error during encryption: {e}")
 
 def decrypt_image(encrypted_path, key, output_path):
-    with open(encrypted_path, "rb") as f:
-        iv = f.read(16)
-        encrypted_data = f.read()
+    try:
+        with open(encrypted_path, 'rb') as f:
+            encrypted = f.read()
 
-    cipher = AES.new(key, AES.MODE_CBC, iv)
-    decrypted_padded = cipher.decrypt(encrypted_data)
-    decrypted_data = unpad(decrypted_padded)
+        iv = encrypted[:16]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        decrypted = cipher.decrypt(encrypted[16:])
+        decrypted = unpad(decrypted)
 
-    with open(output_path, "wb") as f:
-        f.write(decrypted_data)
+        with open(output_path, 'wb') as f:
+            f.write(decrypted)
 
-    print(f"Decrypted image saved to {output_path}")
+        print(f"\n[+] Decrypted image saved to: {output_path}")
+
+    except Exception as e:
+        print(f"[!] Error during decryption: {e}")
+
+def main():
+    print("=== Image Encryptor ===")
+    choice = input("Encrypt (E) or Decrypt (D)? ").strip().lower()
+
+    # 32-byte (256-bit) encryption key
+    key = b'This_is_a_32_byte_secret_key_for_AES!'
+
+    if choice == 'e':
+        image_path = input("Enter full path to image to encrypt: ").strip()
+        if not os.path.isfile(image_path):
+            print("[!] File does not exist.")
+            return
+        encrypt_image(image_path, key)
+
+    elif choice == 'd':
+        encrypted_path = input("Enter path to encrypted image (.enc): ").strip()
+        output_path = input("Enter output path for decrypted image (e.g., image.jpg): ").strip()
+        decrypt_image(encrypted_path, key, output_path)
+
+    else:
+        print("[!] Invalid option. Use 'E' for encrypt or 'D' for decrypt.")
 
 if __name__ == "_main_":
-    import base64
-
-    # Use a 16, 24 or 32 byte key (e.g., 32 bytes = 256-bit AES)
-    key = b"This_is_a_32_byte_key_for_AES!!"
-
-    choice = input("Encrypt (E) or Decrypt (D)? ").lower()
-    if choice == "e":
-        path = input("Enter path to image to encrypt: ")
-        encrypt_image(path, key)
-    elif choice == "d":
-        path = input("Enter path to encrypted image: ")
-        output = input("Enter output path (e.g., image.jpg): ")
-        decrypt_image(path, key, output)
-    else:
-        print("Invalid option.")
+    main()
