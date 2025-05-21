@@ -1,22 +1,13 @@
-# Image Encryption Project
+# 🔐 Image Encryption Project
 
 ## Description
-This project encrypts image files using AES encryption to ensure secure transmission/storage. The image is unreadable without the correct key.
+Securely encrypt and decrypt images using AES (CBC mode) in Python.
 
 ## Features
-- AES 256-bit encryption using CBC mode
-- Image padding and IV handling
-- Simple CLI interface
-- Easily extendable
+- AES encryption
+- Padding and IV handling
+- Key stored in a file (for demo)
 
-## Requirements
-- Python 3.x
-- pycryptodome
-- Pillow
-
-## Usage
-
-### Encrypt an image:
+## Setup
 ```bash
-python image_encryptor.py
-# Select Encrypt, enter image path
+pip install -r requirements.txt
