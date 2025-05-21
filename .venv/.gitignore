@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.idea/
+.venv/
+key.txt
+encrypted_image.enc
+decrypted_image.png
+
